@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import { pool } from "../../db/db";
 import type { ILogin, ISingUp } from "./auth.interface";
+import jwt from "jsonwebtoken"
+import config from "../../config";
 
 const createUserInDB = async (payload: ISingUp) => {
   const { name, email, password, role } = payload;
@@ -28,7 +30,20 @@ const loginUserIntoDB = async (payload: ILogin) => {
   if (!checkPassword) {
     throw new Error("invalid credential");
   }
-  return user;
+
+  const jwtPayload = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role : user.role,
+    created_at : user.created_at,
+    updated_at : user.updated_at
+  };
+
+  const token = jwt.sign(jwtPayload , config.jwtSecret as string , {expiresIn : "1d"})
+  return {token , user : jwtPayload}
+
+
 };
 
 export const authService = {
