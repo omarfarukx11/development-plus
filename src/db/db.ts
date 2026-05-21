@@ -16,7 +16,7 @@ export const initDB = async () => {
         role VARCHAR(20) DEFAULT 'contributor',
 
         created_at TIMESTAMP DEFAULT NOW(),
-        update_at TIMESTAMP DEFAULT NOW()
+        updated_at TIMESTAMP DEFAULT NOW()
         )
         `);
 
