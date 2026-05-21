@@ -28,6 +28,7 @@ const loginUserIntoDB = async (payload: ILogin) => {
   if (!checkPassword) {
     throw new Error("invalid credential");
   }
+  return user;
 };
 
 export const authService = {
