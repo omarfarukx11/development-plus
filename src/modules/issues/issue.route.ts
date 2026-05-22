@@ -6,9 +6,9 @@ import { userRole } from "../../types";
 
 
 const router = Router()
-router.post("/" , auth("contributor", "maintainer"), issueController.createIssue)
+router.post("/" , auth(userRole.contributor , userRole.maintainer), issueController.createIssue)
 router.get("/" , issueController.getAllUsers) 
 router.get("/:id" , issueController.getSingleUsers) 
-router.patch("/:id" ,auth("maintainer", "contributor"), issueController.updateIssue) 
+router.patch("/:id" ,auth(userRole.contributor , userRole.maintainer), issueController.updateIssue) 
 router.delete("/:id",auth(userRole.contributor , userRole.maintainer), issueController.deleteIssue) 
 export const issueRouter = router;
