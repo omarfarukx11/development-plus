@@ -8,7 +8,7 @@ const createIssue = async (req: Request, res: Response) => {
     const result = await issueService.postIssueIntoDB(newData);
     return res.status(201).json({
       success: true,
-      message: "Issues created successfully",
+      message: "Issue created successfully",
       data: result.rows[0],
     });
   } catch (error: any) {
@@ -20,7 +20,7 @@ const createIssue = async (req: Request, res: Response) => {
   }
 };
 
-const getAllUsers = async (req: Request, res: Response) => {
+const getAllIssues = async (req: Request, res: Response) => {
   try {
     const result = await issueService.getAllIssueFromDB(req.query);
     if (result.length === 0) {
@@ -31,7 +31,7 @@ const getAllUsers = async (req: Request, res: Response) => {
     }
     return res.status(200).json({
       success: true,
-      message: "Fetch all issue successfully",
+      message: "All issues retrieved successfully",
       data: result,
     });
   } catch (error: any) {
@@ -43,7 +43,7 @@ const getAllUsers = async (req: Request, res: Response) => {
   }
 };
 
-const getSingleUsers = async (req: Request, res: Response) => {
+const getSingleIssue = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const result = await issueService.getSingleIssueFromDB(id as string);
@@ -55,7 +55,7 @@ const getSingleUsers = async (req: Request, res: Response) => {
     }
     return res.status(200).json({
       success: true,
-      message: "Fetch issue successfully",
+      message: "Issue retrieved successfully",
       data: result,
     });
   } catch (error: any) {
@@ -82,7 +82,7 @@ const updateIssue = async (req: Request, res: Response) => {
     }
     return res.status(200).json({
       success: true,
-      message: "Fetch issue successfully",
+      message: "Issue Updated successfully",
       data: result.rows[0],
     });
   } catch (error: any) {
@@ -114,8 +114,8 @@ const deleteIssue = async (req: Request, res: Response) => {
 
 export const issueController = {
   createIssue,
-  getAllUsers,
-  getSingleUsers,
+  getAllIssues,
+  getSingleIssue,
   updateIssue,
   deleteIssue
 };
