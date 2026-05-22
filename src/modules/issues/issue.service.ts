@@ -2,6 +2,7 @@ import { error } from "node:console";
 import type { IIssue, IIssueTwo, IQuery } from "./issue.interface";
 import { pool } from "../../db/db";
 import { title } from "node:process";
+import { userRole } from "../../types";
 
 const postIssueIntoDB = async (payload: IIssue) => {
   const { title, description, type, status, reporter_id } = payload;
@@ -102,26 +103,26 @@ const getSingleIssueFromDB = async (id: string) => {
   return issues;
 };
 
-const updateIssueIntoDB = async (payload : IIssueTwo, id : string) => {
-  const {title, description, type, status, reporter_id , role } = payload;
+const updateIssueIntoDB = async (payload: IIssueTwo, id: string) => {
+  const { title, description, type, status, reporter_id, role } = payload;
 
   const checkIssueStatus = await pool.query(
     `SELECT reporter_id, status FROM issues WHERE id = $1`,
-    [id]
+    [id],
   );
 
   if (checkIssueStatus.rows.length === 0) {
     throw new Error("Not found");
   }
-  const issue = checkIssueStatus.rows[0]
+  const issue = checkIssueStatus.rows[0];
 
-  if(role === "contributor") {
+  if (role === "contributor") {
     if (issue.reporter_id !== reporter_id) {
-    throw new Error("Forbidden access that is not your issue");
-  }
-  if (issue.status !== "open") {
-    throw new Error("you can only update your open type issues");
-  }
+      throw new Error("Forbidden access that is not your issue");
+    }
+    if (issue.status !== "open") {
+      throw new Error("you can only update your open type issues");
+    }
   }
   const result = await pool.query(
     `
@@ -134,14 +135,27 @@ const updateIssueIntoDB = async (payload : IIssueTwo, id : string) => {
     WHERE id=$5 
     RETURNING *
     `,
-    [title,description,type,status,id],
+    [title, description, type, status, id],
   );
   return result;
 };
+
+const deleteIssueFromDB = async (role: string, id : string) => {
+  if (role !== userRole.maintainer) {
+    throw new Error("you not able to delete the issue");
+  }
+  const result = await pool.query(
+  `DELETE FROM issues WHERE id=$1 RETURNING *`,
+  [id],
+);
+return result
+};
+
 
 export const issueService = {
   postIssueIntoDB,
   getAllIssueFromDB,
   getSingleIssueFromDB,
   updateIssueIntoDB,
+  deleteIssueFromDB,
 };
