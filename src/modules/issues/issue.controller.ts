@@ -4,7 +4,9 @@ import { issueService } from "./issue.service";
 
 const createIssue = async (req: Request, res: Response) => {
    try {
-    const result = await issueService.postIssueIntoDB(req.body)
+    const reporterId = req.user?.id
+    const newData = { ...req.body, reporter_id : reporterId};
+    const result = await issueService.postIssueIntoDB(newData)
     res.status(201).json({
       success: true,
       message: "Profile created successfully",
