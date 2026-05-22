@@ -9,8 +9,25 @@ const createIssue = async (req: Request, res: Response) => {
     const result = await issueService.postIssueIntoDB(newData)
     res.status(201).json({
       success: true,
-      message: "Profile created successfully",
+      message: "Issues created successfully",
       data: result.rows[0],
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success : false,
+      message: error.message,
+      error: error,
+    });
+  }
+}
+
+const getAllUsers = async (req: Request, res: Response) => {
+  try {
+  const result = await issueService.getAllIssueFromDB(req.query)
+   res.status(200).json({
+      success: true,
+      message: "Fetch all issue successfully",
+      data: result
     });
   } catch (error: any) {
     res.status(500).json({
@@ -23,4 +40,5 @@ const createIssue = async (req: Request, res: Response) => {
 
 export const issueController = {
     createIssue,
+    getAllUsers,
 }

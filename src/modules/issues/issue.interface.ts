@@ -5,3 +5,9 @@ export interface IIssue {
   type: "bug" | "feature_request";
   reporter_id?: number;
 }
+
+export interface IQuery  {
+ sort? : string,
+ type? : string,
+ status? : string,
+}
