@@ -118,7 +118,7 @@ const updateIssueIntoDB = async (payload: IIssueTwo, id: string) => {
 
   if (role === userRole.contributor) {
     if (issue.reporter_id !== reporter_id) {
-      throw new Error("Forbidden access that is not your issue");
+      throw new Error("Access denied You can only manage your own issues.");
     }
     if (issue.status !== issueStatus.open) {
       throw new Error("you can only update your open type issues");
@@ -142,7 +142,7 @@ const updateIssueIntoDB = async (payload: IIssueTwo, id: string) => {
 
 const deleteIssueFromDB = async (role: string, id : string) => {
   if (role !== userRole.maintainer) {
-    throw new Error("you not able to delete the issue");
+    throw new Error("You do not have permission to delete this issue.");
   }
   const result = await pool.query(
   `DELETE FROM issues WHERE id=$1 RETURNING *`,
