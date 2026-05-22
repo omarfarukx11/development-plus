@@ -7,6 +7,11 @@ import config from "../../config";
 const createUserInDB = async (payload: ISingUp) => {
   const { name, email, password, role } = payload;
   const hashPassword = await bcrypt.hash(password, 10);
+  const allowedRoles = ['contributor', 'maintainer'];
+  
+  if (role && !allowedRoles.includes(role)) {
+    throw new Error("Invalid role! Role must be either 'contributor' or 'maintainer'.")
+  }
   const result = await pool.query(
     `
     INSERT INTO users(name,email,password,role) VALUES($1,$2,$3,COALESCE($4,'contributor')) RETURNING *
