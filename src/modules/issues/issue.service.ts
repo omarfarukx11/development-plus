@@ -2,26 +2,35 @@ import { error } from "node:console";
 import type { IIssue, IIssueTwo, IQuery } from "./issue.interface";
 import { pool } from "../../db/db";
 import { title } from "node:process";
-import { issueStatus, userRole } from "../../types";
+import { issueStatus, issueType, userRole } from "../../utility";
 
 const postIssueIntoDB = async (payload: IIssue) => {
   const { title, description, type, status, reporter_id } = payload;
-  const allowedStatus = ["open", "in_progress", "resolved"];
-  const allowedType = ["bug", "feature_request"];
+  const allowedStatus = [
+    issueStatus.open,
+    issueStatus.progress,
+    issueStatus.resolved,
+  ];
+  const allowedType = [issueType.bug, issueType.feature_request];
   if (!title || title.length > 150) {
-    throw new Error("Title is required and max 150 chars.");
+    throw new Error("Title is required and cannot exceed 150 characters.");
   }
+
   if (!description || description.length < 20) {
-    throw new Error("Description must needed & at least 20 chars.");
-  }
-  if (!type || (type && !allowedType.includes(type))) {
     throw new Error(
-      "Type must needed & type must be 'bug' or 'feature_request'",
+      "Description is required and must be at least 20 characters long.",
     );
   }
+
+  if (!type || !allowedType.includes(type)) {
+    throw new Error(
+      "Invalid type. Please specify type as either 'bug' or 'feature_request'.",
+    );
+  }
+
   if (status && !allowedStatus.includes(status)) {
     throw new Error(
-      "Invalid Status! Status must be 'open' or 'in_progress' or 'resolved'.",
+      "Invalid status. Allowed values are 'open', 'in_progress', or 'resolved'.",
     );
   }
   const result = await pool.query(
@@ -140,17 +149,16 @@ const updateIssueIntoDB = async (payload: IIssueTwo, id: string) => {
   return result;
 };
 
-const deleteIssueFromDB = async (role: string, id : string) => {
+const deleteIssueFromDB = async (role: string, id: string) => {
   if (role !== userRole.maintainer) {
     throw new Error("You do not have permission to delete this issue.");
   }
   const result = await pool.query(
-  `DELETE FROM issues WHERE id=$1 RETURNING *`,
-  [id],
-);
-return result
+    `DELETE FROM issues WHERE id=$1 RETURNING *`,
+    [id],
+  );
+  return result;
 };
-
 
 export const issueService = {
   postIssueIntoDB,

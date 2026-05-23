@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { issueController } from "./issue.controller";
 import auth from "../../middleware/auth";
-import { userRole } from "../../types";
+import { userRole } from "../../utility";
 
 
 
