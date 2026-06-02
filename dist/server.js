@@ -164,7 +164,7 @@ import { Router as Router2 } from "express";
 import "console";
 import "process";
 
-// src/types/index.ts
+// src/utility/index.ts
 var userRole = {
   contributor: "contributor",
   maintainer: "maintainer"
@@ -174,26 +174,36 @@ var issueStatus = {
   progress: "in_progress",
   resolved: "resolved"
 };
+var issueType = {
+  bug: "bug",
+  feature_request: "feature_request"
+};
 
 // src/modules/issues/issue.service.ts
 var postIssueIntoDB = async (payload) => {
   const { title: title2, description, type, status, reporter_id } = payload;
-  const allowedStatus = ["open", "in_progress", "resolved"];
-  const allowedType = ["bug", "feature_request"];
+  const allowedStatus = [
+    issueStatus.open,
+    issueStatus.progress,
+    issueStatus.resolved
+  ];
+  const allowedType = [issueType.bug, issueType.feature_request];
   if (!title2 || title2.length > 150) {
-    throw new Error("Title is required and max 150 chars.");
+    throw new Error("Title is required and cannot exceed 150 characters.");
   }
   if (!description || description.length < 20) {
-    throw new Error("Description must needed & at least 20 chars.");
-  }
-  if (!type || type && !allowedType.includes(type)) {
     throw new Error(
-      "Type must needed & type must be 'bug' or 'feature_request'"
+      "Description is required and must be at least 20 characters long."
+    );
+  }
+  if (!type || !allowedType.includes(type)) {
+    throw new Error(
+      "Invalid type. Please specify type as either 'bug' or 'feature_request'."
     );
   }
   if (status && !allowedStatus.includes(status)) {
     throw new Error(
-      "Invalid Status! Status must be 'open' or 'in_progress' or 'resolved'."
+      "Invalid status. Allowed values are 'open', 'in_progress', or 'resolved'."
     );
   }
   const result = await pool.query(
@@ -282,7 +292,7 @@ var updateIssueIntoDB = async (payload, id) => {
   const issue = checkIssueStatus.rows[0];
   if (role === userRole.contributor) {
     if (issue.reporter_id !== reporter_id) {
-      throw new Error("Forbidden access that is not your issue");
+      throw new Error("Access denied You can only manage your own issues.");
     }
     if (issue.status !== issueStatus.open) {
       throw new Error("you can only update your open type issues");
@@ -305,7 +315,7 @@ var updateIssueIntoDB = async (payload, id) => {
 };
 var deleteIssueFromDB = async (role, id) => {
   if (role !== userRole.maintainer) {
-    throw new Error("you not able to delete the issue");
+    throw new Error("You do not have permission to delete this issue.");
   }
   const result = await pool.query(
     `DELETE FROM issues WHERE id=$1 RETURNING *`,
@@ -321,19 +331,32 @@ var issueService = {
   deleteIssueFromDB
 };
 
+// src/utility/sendRespones.ts
+var sendResponse = (res, data) => {
+  return res.status(data.statusCode).json({
+    success: data.success,
+    message: data.message,
+    data: data.data,
+    error: data.error
+  });
+};
+var sendRespones_default = sendResponse;
+
 // src/modules/issues/issue.controller.ts
 var createIssue = async (req, res) => {
   try {
     const reporterId = req.user?.id;
     const newData = { ...req.body, reporter_id: reporterId };
     const result = await issueService.postIssueIntoDB(newData);
-    return res.status(201).json({
+    sendRespones_default(res, {
+      statusCode: 201,
       success: true,
       message: "Issue created successfully",
       data: result.rows[0]
     });
   } catch (error2) {
-    return res.status(500).json({
+    sendRespones_default(res, {
+      statusCode: 500,
       success: false,
       message: error2.message,
       error: error2
@@ -344,18 +367,21 @@ var getAllIssues = async (req, res) => {
   try {
     const result = await issueService.getAllIssueFromDB(req.query);
     if (result.length === 0) {
-      return res.status(404).json({
+      sendRespones_default(res, {
+        statusCode: 404,
         success: false,
         message: "Issues Not Found"
       });
     }
-    return res.status(200).json({
+    sendRespones_default(res, {
+      statusCode: 200,
       success: true,
       message: "All issues retrieved successfully",
       data: result
     });
   } catch (error2) {
-    return res.status(500).json({
+    sendRespones_default(res, {
+      statusCode: 500,
       success: false,
       message: error2.message,
       error: error2
@@ -367,18 +393,21 @@ var getSingleIssue = async (req, res) => {
     const { id } = req.params;
     const result = await issueService.getSingleIssueFromDB(id);
     if (result.length === 0) {
-      return res.status(404).json({
+      sendRespones_default(res, {
+        statusCode: 404,
         success: false,
         message: "Issue Not Found"
       });
     }
-    return res.status(200).json({
+    sendRespones_default(res, {
+      statusCode: 200,
       success: true,
       message: "Issue retrieved successfully",
       data: result
     });
   } catch (error2) {
-    return res.status(500).json({
+    sendRespones_default(res, {
+      statusCode: 500,
       success: false,
       message: error2.message,
       error: error2
@@ -393,18 +422,21 @@ var updateIssue = async (req, res) => {
     const newData = { ...req.body, reporter_id: reporterId, role };
     const result = await issueService.updateIssueIntoDB(newData, id);
     if (result.rows.length === 0) {
-      return res.status(404).json({
+      sendRespones_default(res, {
+        statusCode: 404,
         success: false,
         message: "Issue Not Found"
       });
     }
-    return res.status(200).json({
+    sendRespones_default(res, {
+      statusCode: 200,
       success: true,
       message: "Issue Updated successfully",
       data: result.rows[0]
     });
   } catch (error2) {
-    return res.status(500).json({
+    sendRespones_default(res, {
+      statusCode: 500,
       success: false,
       message: error2.message,
       error: error2
@@ -416,12 +448,14 @@ var deleteIssue = async (req, res) => {
   const role = req.user?.role;
   try {
     const result = await issueService.deleteIssueFromDB(role, id);
-    res.status(200).json({
+    sendRespones_default(res, {
+      statusCode: 200,
       success: true,
       message: "Issue Deleted successfully"
     });
   } catch (error2) {
-    res.status(500).json({
+    sendRespones_default(res, {
+      statusCode: 500,
       success: false,
       message: error2.message,
       error: error2

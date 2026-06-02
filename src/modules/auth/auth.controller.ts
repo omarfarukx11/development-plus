@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { authService } from "./auth.service";
 
-const singUpUser = async (req: Request, res: Response) => {
+const signUpUser = async (req: Request, res: Response) => {
   try {
     const result = await authService.createUserInDB(req.body);
     res.status(201).json({
@@ -36,6 +36,6 @@ const loginUser = async (req: Request, res: Response) => {
 };
 
 export const authController = {
-  singUpUser,
+  signUpUser,
   loginUser,
 };
